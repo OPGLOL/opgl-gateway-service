@@ -1,6 +1,6 @@
 package proxy
 
-import "github.com/OPGLOL/opgl-gateway/internal/models"
+import "github.com/OPGLOL/opgl-gateway-service/internal/models"
 
 // ServiceProxyInterface defines the interface for service proxy operations
 // This interface enables mocking in tests

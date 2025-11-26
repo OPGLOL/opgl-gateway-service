@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/OPGLOL/opgl-gateway/internal/proxy"
+	"github.com/OPGLOL/opgl-gateway-service/internal/proxy"
 )
 
 // Handler manages HTTP request handlers for the gateway

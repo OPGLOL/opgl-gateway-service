@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/OPGLOL/opgl-gateway/internal/models"
+	"github.com/OPGLOL/opgl-gateway-service/internal/models"
 )
 
 // TestNewServiceProxy tests the NewServiceProxy constructor

@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/OPGLOL/opgl-gateway/internal/models"
+	"github.com/OPGLOL/opgl-gateway-service/internal/models"
 )
 
 // TestSetupRouter tests that all routes are registered correctly

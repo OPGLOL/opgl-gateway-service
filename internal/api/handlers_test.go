@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/OPGLOL/opgl-gateway/internal/models"
+	"github.com/OPGLOL/opgl-gateway-service/internal/models"
 )
 
 // MockServiceProxy is a mock implementation of ServiceProxyInterface for testing

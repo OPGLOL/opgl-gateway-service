@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/OPGLOL/opgl-gateway/internal/models"
+	"github.com/OPGLOL/opgl-gateway-service/internal/models"
 )
 
 // ServiceProxy handles communication with microservices

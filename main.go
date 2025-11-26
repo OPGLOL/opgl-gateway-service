@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/OPGLOL/opgl-gateway/internal/api"
-	"github.com/OPGLOL/opgl-gateway/internal/middleware"
-	"github.com/OPGLOL/opgl-gateway/internal/proxy"
+	"github.com/OPGLOL/opgl-gateway-service/internal/api"
+	"github.com/OPGLOL/opgl-gateway-service/internal/middleware"
+	"github.com/OPGLOL/opgl-gateway-service/internal/proxy"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )

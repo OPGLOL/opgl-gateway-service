@@ -1,4 +1,4 @@
-module github.com/OPGLOL/opgl-gateway
+module github.com/OPGLOL/opgl-gateway-service
 
 go 1.21
 
