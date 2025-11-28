@@ -2,11 +2,21 @@ package models
 
 import "time"
 
-// Summoner represents a League of Legends player account
+// Summoner represents a League of Legends player account (internal use)
 type Summoner struct {
 	ID            string `json:"id"`
 	AccountID     string `json:"accountId"`
 	PUUID         string `json:"puuid"`
+	Name          string `json:"name"`
+	ProfileIconID int    `json:"profileIconId"`
+	SummonerLevel int64  `json:"summonerLevel"`
+}
+
+// SummonerResponse represents summoner data returned to external clients
+// PUUID is excluded for security reasons
+type SummonerResponse struct {
+	ID            string `json:"id"`
+	AccountID     string `json:"accountId"`
 	Name          string `json:"name"`
 	ProfileIconID int    `json:"profileIconId"`
 	SummonerLevel int64  `json:"summonerLevel"`

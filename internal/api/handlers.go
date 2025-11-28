@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/OPGLOL/opgl-gateway-service/internal/models"
 	"github.com/OPGLOL/opgl-gateway-service/internal/proxy"
 )
 
@@ -57,12 +58,14 @@ func (handler *Handler) GetSummoner(writer http.ResponseWriter, request *http.Re
 	json.NewEncoder(writer).Encode(summoner)
 }
 
-// GetMatches proxies match history requests to opgl-data service using Riot ID
+// GetMatches proxies match history requests to opgl-data service
+// Accepts either Riot ID (region, gameName, tagLine) or PUUID (region, puuid)
 func (handler *Handler) GetMatches(writer http.ResponseWriter, request *http.Request) {
 	var matchRequest struct {
 		Region   string `json:"region"`
 		GameName string `json:"gameName"`
 		TagLine  string `json:"tagLine"`
+		PUUID    string `json:"puuid"`
 		Count    int    `json:"count"`
 	}
 
@@ -71,17 +74,31 @@ func (handler *Handler) GetMatches(writer http.ResponseWriter, request *http.Req
 		return
 	}
 
-	if matchRequest.Region == "" || matchRequest.GameName == "" || matchRequest.TagLine == "" {
-		http.Error(writer, "region, gameName, and tagLine are required", http.StatusBadRequest)
-		return
-	}
-
+	// Set default count if not provided
 	count := matchRequest.Count
 	if count <= 0 {
 		count = 20
 	}
 
-	matches, err := handler.serviceProxy.GetMatchesByRiotID(matchRequest.Region, matchRequest.GameName, matchRequest.TagLine, count)
+	var matches []models.Match
+	var err error
+
+	// Check if PUUID is provided for direct lookup
+	if matchRequest.PUUID != "" {
+		if matchRequest.Region == "" {
+			http.Error(writer, "region is required when using puuid", http.StatusBadRequest)
+			return
+		}
+		matches, err = handler.serviceProxy.GetMatchesByPUUID(matchRequest.Region, matchRequest.PUUID, count)
+	} else {
+		// Use Riot ID lookup
+		if matchRequest.Region == "" || matchRequest.GameName == "" || matchRequest.TagLine == "" {
+			http.Error(writer, "region, gameName, and tagLine are required (or use region and puuid)", http.StatusBadRequest)
+			return
+		}
+		matches, err = handler.serviceProxy.GetMatchesByRiotID(matchRequest.Region, matchRequest.GameName, matchRequest.TagLine, count)
+	}
+
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
