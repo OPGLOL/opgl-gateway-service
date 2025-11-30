@@ -1,22 +1,49 @@
 package api
 
 import (
+	"net/http"
+
+	"github.com/OPGLOL/opgl-gateway-service/internal/middleware"
+	"github.com/OPGLOL/opgl-gateway-service/internal/ratelimit"
 	"github.com/gorilla/mux"
 )
 
 // SetupRouter configures all routes for the gateway
-func SetupRouter(handler *Handler) *mux.Router {
+// rateLimiter can be nil if rate limiting is not enabled
+func SetupRouter(handler *Handler, adminHandler *AdminHandler, rateLimiter *ratelimit.RateLimiter) *mux.Router {
 	router := mux.NewRouter()
 
-	// Health check endpoint
+	// Health check endpoint - no rate limiting
 	router.HandleFunc("/health", handler.HealthCheck).Methods("POST")
 
-	// Proxied data endpoints
-	router.HandleFunc("/api/v1/summoner", handler.GetSummoner).Methods("POST")
-	router.HandleFunc("/api/v1/matches", handler.GetMatches).Methods("POST")
+	// API routes subrouter
+	apiRouter := router.PathPrefix("/api/v1").Subrouter()
 
-	// Orchestrated analysis endpoint
-	router.HandleFunc("/api/v1/analyze", handler.AnalyzePlayer).Methods("POST")
+	// Apply rate limiting middleware if configured
+	if rateLimiter != nil {
+		apiRouter.Use(middleware.RateLimitMiddleware(rateLimiter))
+	}
+
+	// Proxied data endpoints (rate limited)
+	apiRouter.HandleFunc("/summoner", handler.GetSummoner).Methods("POST")
+	apiRouter.HandleFunc("/matches", handler.GetMatches).Methods("POST")
+
+	// Orchestrated analysis endpoint (rate limited)
+	apiRouter.HandleFunc("/analyze", handler.AnalyzePlayer).Methods("POST")
+
+	// Admin endpoints (no rate limiting for admin, but require separate authentication in future)
+	if adminHandler != nil {
+		adminRouter := router.PathPrefix("/api/v1/admin").Subrouter()
+		adminRouter.HandleFunc("/apikeys", adminHandler.CreateAPIKey).Methods("POST")
+		adminRouter.HandleFunc("/apikeys/list", adminHandler.ListAPIKeys).Methods("POST")
+		adminRouter.HandleFunc("/apikeys/delete", adminHandler.DeleteAPIKey).Methods("POST")
+		adminRouter.HandleFunc("/apikeys/{id}", adminHandler.DeleteAPIKey).Methods("DELETE")
+	}
 
 	return router
+}
+
+// SetupRouterWithoutRateLimit configures routes without rate limiting (for backward compatibility)
+func SetupRouterWithoutRateLimit(handler *Handler) http.Handler {
+	return SetupRouter(handler, nil, nil)
 }

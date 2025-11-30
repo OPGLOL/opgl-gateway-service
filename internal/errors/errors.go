@@ -16,6 +16,9 @@ const (
 	ErrCodePlayerNotFound     ErrorCode = "PLAYER_NOT_FOUND"
 	ErrCodeMatchesNotFound    ErrorCode = "MATCHES_NOT_FOUND"
 	ErrCodeInvalidRegion      ErrorCode = "INVALID_REGION"
+	ErrCodeMissingAPIKey      ErrorCode = "MISSING_API_KEY"
+	ErrCodeInvalidAPIKey      ErrorCode = "INVALID_API_KEY"
+	ErrCodeRateLimitExceeded  ErrorCode = "RATE_LIMIT_EXCEEDED"
 
 	// Server errors (5xx)
 	ErrCodeDataServiceError   ErrorCode = "DATA_SERVICE_ERROR"
