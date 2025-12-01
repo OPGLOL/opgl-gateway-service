@@ -20,6 +20,13 @@ const (
 	ErrCodeInvalidAPIKey      ErrorCode = "INVALID_API_KEY"
 	ErrCodeRateLimitExceeded  ErrorCode = "RATE_LIMIT_EXCEEDED"
 
+	// Auth errors
+	ErrCodeUnauthorized       ErrorCode = "UNAUTHORIZED"
+	ErrCodeInvalidCredentials ErrorCode = "INVALID_CREDENTIALS"
+	ErrCodeInvalidToken       ErrorCode = "INVALID_TOKEN"
+	ErrCodeEmailAlreadyExists ErrorCode = "EMAIL_ALREADY_EXISTS"
+	ErrCodeUserNotFound       ErrorCode = "USER_NOT_FOUND"
+
 	// Server errors (5xx)
 	ErrCodeDataServiceError   ErrorCode = "DATA_SERVICE_ERROR"
 	ErrCodeCortexServiceError ErrorCode = "CORTEX_SERVICE_ERROR"

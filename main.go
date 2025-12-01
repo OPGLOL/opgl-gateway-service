@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/OPGLOL/opgl-gateway-service/internal/api"
+	"github.com/OPGLOL/opgl-gateway-service/internal/auth"
 	"github.com/OPGLOL/opgl-gateway-service/internal/db"
 	"github.com/OPGLOL/opgl-gateway-service/internal/middleware"
 	"github.com/OPGLOL/opgl-gateway-service/internal/proxy"
@@ -54,6 +55,11 @@ func main() {
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 
+	// JWT configuration
+	jwtSecret := os.Getenv("JWT_SECRET")
+	jwtAccessExpiry := os.Getenv("JWT_ACCESS_EXPIRY")
+	jwtRefreshExpiry := os.Getenv("JWT_REFRESH_EXPIRY")
+
 	log.Info().
 		Str("port", port).
 		Str("data_service_url", dataServiceURL).
@@ -83,9 +89,11 @@ func main() {
 	// Initialize HTTP handler
 	handler := api.NewHandler(serviceProxy)
 
-	// Initialize rate limiting and admin handler if database is configured
+	// Initialize rate limiting, auth, and admin handler if database is configured
 	var rateLimiter *ratelimit.RateLimiter
 	var adminHandler *api.AdminHandler
+	var authHandler *api.AuthHandler
+	var authService *auth.AuthService
 
 	if database != nil {
 		// Initialize API key repository
@@ -98,12 +106,51 @@ func main() {
 		// Initialize admin handler
 		adminHandler = api.NewAdminHandler(apiKeyRepository)
 		log.Info().Msg("Admin endpoints enabled")
+
+		// Initialize auth service if JWT secret is configured
+		if jwtSecret != "" {
+			// Parse expiry durations with defaults
+			accessExpiry := 15 * time.Minute
+			if jwtAccessExpiry != "" {
+				if parsed, err := time.ParseDuration(jwtAccessExpiry); err == nil {
+					accessExpiry = parsed
+				}
+			}
+
+			refreshExpiry := 7 * 24 * time.Hour
+			if jwtRefreshExpiry != "" {
+				if parsed, err := time.ParseDuration(jwtRefreshExpiry); err == nil {
+					refreshExpiry = parsed
+				}
+			}
+
+			authService = auth.NewAuthService(jwtSecret, accessExpiry, refreshExpiry)
+
+			// Initialize user repository
+			userRepository := repository.NewPostgresUserRepository(database.DB)
+
+			// Initialize auth handler
+			authHandler = api.NewAuthHandler(authService, userRepository)
+			log.Info().
+				Dur("access_expiry", accessExpiry).
+				Dur("refresh_expiry", refreshExpiry).
+				Msg("JWT authentication enabled")
+		} else {
+			log.Warn().Msg("JWT authentication disabled - JWT_SECRET not configured")
+		}
 	} else {
-		log.Warn().Msg("Rate limiting disabled - database not configured")
+		log.Warn().Msg("Rate limiting and auth disabled - database not configured")
 	}
 
-	// Set up router with rate limiting
-	router := api.SetupRouter(handler, adminHandler, rateLimiter)
+	// Set up router with all handlers
+	routerConfig := &api.RouterConfig{
+		Handler:      handler,
+		AdminHandler: adminHandler,
+		AuthHandler:  authHandler,
+		RateLimiter:  rateLimiter,
+		AuthService:  authService,
+	}
+	router := api.SetupRouter(routerConfig)
 
 	// Wrap router with CORS middleware first to handle preflight requests
 	corsRouter := middleware.CORSMiddleware(router)
